@@ -1,0 +1,15 @@
+{
+  "name": "@ai-goes-to-ny/shared",
+  "version": "1.0.0",
+  "main": "dist/index.js",
+  "typings": "dist/index.d.ts",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/node": "^16.11.24",
+    "typescript": "^4.5.5"
+  },
+  "scripts": {
+    "build": "tsc",
+    "start": "tsc --watch"
+  }
+}

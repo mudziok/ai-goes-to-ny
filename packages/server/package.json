@@ -1,0 +1,21 @@
+{
+  "name": "@ai-goes-to-ny/server",
+  "version": "1.0.0",
+  "main": "index.js",
+  "license": "MIT",
+  "dependencies": {
+    "@ai-goes-to-ny/shared": "1.0.0",
+    "@magenta/sketch": "^0.2.0",
+    "node-fetch": "2",
+    "socket.io": "^4.4.1"
+  },
+  "devDependencies": {
+    "@types/node": "^16.11.24",
+    "ts-node": "^6.1.0",
+    "typescript": "^4.5.5"
+  },
+  "scripts": {
+    "start": "ts-node src/index.ts",
+    "build": "tsc"
+  }
+}
