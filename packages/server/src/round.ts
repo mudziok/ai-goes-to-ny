@@ -1,8 +1,8 @@
 import { Point, RoundState, sleep, Stroke } from "@ai-goes-to-ny/shared";
 import { Avatar, avatars } from "@ai-goes-to-ny/shared/dist/avatar";
 import { Socket } from "socket.io";
-import { GameSocket } from ".";
 import { AI } from "./ai";
+import { GameSocket } from "./utils";
 
 interface Turn {
     avatar: Avatar,

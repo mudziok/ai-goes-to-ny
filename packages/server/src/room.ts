@@ -1,7 +1,7 @@
 import { PlayerInfo, RoomState, RoundState, sleep } from "@ai-goes-to-ny/shared";
 import { Socket } from "socket.io";
-import { GameServer, GameSocket } from ".";
 import { Round } from "./round";
+import { GameServer, GameSocket } from "./utils";
 
 export class Room {
     private players = new Set<GameSocket>();
