@@ -19,19 +19,15 @@ export class Round {
         await this.ai.initialize();
     }
 
-    public startGame = async (turns: Turn[]) => {
-        const currentTurn = turns.pop();
-
-        if (currentTurn === undefined) { return; }
-
+    public playTurn = async (turn: Turn) => {
         const roundState: RoundState = {
             theme: "cat",
             strokes: this.strokes,
-            currentlyDrawing: currentTurn.avatar,
+            currentlyDrawing: turn.avatar,
         };
         this.updateRoundState(roundState);
 
-        const playerLine = currentTurn.requestLine();
+        const playerLine = turn.requestLine();
 
         const timeoutLine = new Promise<Stroke[]>(async resolve => {
             await sleep(10000);
@@ -44,8 +40,6 @@ export class Round {
         
         roundState.strokes = this.strokes;
         this.updateRoundState(roundState);
-
-        await this.startGame(turns);
     }
 
     public inquireGuesses = async (usedAvatars: Avatar[], decoder: Map<string, GameSocket>) => {

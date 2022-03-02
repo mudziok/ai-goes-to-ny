@@ -49,7 +49,10 @@ export class Room {
 
         const [turns, decoder] = round.generateTurns(this.players);
         const usedAvatars = turns.map(turn => turn.avatar);
-        await round.startGame(turns);
+
+        for (const turn of turns) {
+            await round.playTurn(turn);
+        }
 
         this.changeRoomState(RoomState.Guesses);
         await sleep(1000);
