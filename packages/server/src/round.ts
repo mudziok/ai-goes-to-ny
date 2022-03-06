@@ -12,14 +12,18 @@ interface Turn {
 export class Round {
     private ai = new AI;    
     private strokes: Stroke[] = [];
+    private avaliableAvatars: Avatar[] = Object.values(avatars);
+    private decoder = new Map<string, GameSocket>();
 
-    constructor(private updateRoundState: (roundState: RoundState) => void) {};
+    constructor(private updateRoundState: (roundState: RoundState) => void) {
+        this.avaliableAvatars.sort(() => Math.random() - 0.5);
+    };
 
-    public initialize = async () => {
+    public async initialize() {
         await this.ai.initialize();
     }
 
-    public playTurn = async (turn: Turn) => {
+    public async playTurn(turn: Turn) {
         const roundState: RoundState = {
             theme: "cat",
             strokes: this.strokes,
@@ -29,25 +33,22 @@ export class Round {
 
         const playerLine = turn.requestLine();
 
-        const timeoutLine = new Promise<Stroke[]>(async resolve => {
-            await sleep(10000);
-            resolve([]);
-        });
-
-        const newStroke: Stroke[] = await Promise.any([playerLine, timeoutLine]);
-
-        this.strokes = [...this.strokes, ...newStroke];
+        try {
+            const newStroke: Stroke[] = await playerLine;
+            this.strokes = [...this.strokes, ...newStroke];
+        } catch (error) {}
         
-        roundState.strokes = this.strokes;
-        this.updateRoundState(roundState);
+        const updatedRoundState = {...roundState};
+        updatedRoundState.strokes = this.strokes;
+
+        this.updateRoundState(updatedRoundState);
     }
 
-    public inquireGuesses = async (usedAvatars: Avatar[], decoder: Map<string, GameSocket>) => {
-
-        const players = [...decoder.values()];
+    public async inquireGuesses(usedAvatars: Avatar[]) {
+        const players = [...this.decoder.values()];
 
         const getPlayerRequestGuess = (player: GameSocket) => new Promise<Avatar>(resolve => {
-            const usedAvatarsWithoutPlayer = usedAvatars.filter(avatar => decoder.get(avatar.name) !== player);
+            const usedAvatarsWithoutPlayer = usedAvatars.filter(avatar => this.decoder.get(avatar.name) !== player);
             player.emit("requestGuess", usedAvatarsWithoutPlayer, (avatar: Avatar) => {
                 resolve(avatar);
             });
@@ -58,22 +59,45 @@ export class Round {
         const winningAvatars = await Promise.all(requests);
 
         winningAvatars.forEach(avatar => {
-            if (decoder.has(avatar.name)) {
-                const player = decoder.get(avatar.name)!;
+            if (this.decoder.has(avatar.name)) {
+                const player = this.decoder.get(avatar.name)!;
                 player.data.points += 1;
             }
         })
     }
 
-    public generateTurns = (players: Set<Socket>): [Turn[], Map<string, GameSocket>] => {
-        const getPlayerRequestLine = (player: GameSocket) => new Promise<Stroke[]>(resolve => {
+    public generateTurns = (players: Set<Socket>): Turn[] => {
+        const playerTurns: Turn[] = [...players.values()].map(this.generatePlayerTurn);
+        const aiTurn = this.generateAiTurn();
+
+        const turns = [...playerTurns, aiTurn];
+        turns.sort(() => Math.random() - 0.5);
+
+        return turns;
+    }
+
+    public generatePlayerTurn = (player: Socket): Turn => {
+        const getPlayerRequestLine = (player: GameSocket) => new Promise<Stroke[]>((resolve, reject) => {
+            const timeout = setTimeout(reject, 10000);
+
             player.emit("requestLine", (line: Point[]) => {
                 const movedLine = line.map(([x, y]) => [x - 150, y - 150] as Point);
                 const strokes = this.ai.lineToStroke(movedLine, this.strokes);
+                clearTimeout(timeout);
                 resolve(strokes);
             });
         });
 
+        const randomAvatar = this.avaliableAvatars.pop()!;
+        this.decoder.set(randomAvatar.name, player);
+
+        return {
+            avatar: randomAvatar,
+            requestLine: () => getPlayerRequestLine(player),
+        };
+    }
+
+    public generateAiTurn = (): Turn => {
         const aiRequestLine: () => Promise<Stroke[]> = () => new Promise<Stroke[]>(async resolve => {
             if (this.strokes.length > 0) {
                 this.ai.initRNNStateFromStrokes(this.strokes);
@@ -84,30 +108,9 @@ export class Round {
             resolve(newStroke); 
         });
 
-        const avaliableAvatars: Avatar[] = Object.values(avatars);
-        avaliableAvatars.sort(() => Math.random() - 0.5);
-        
-        const decoder = new Map<string, GameSocket>();
-
-        const playerTurns: Turn[] = [...players.values()].map(player => {
-
-            const randomAvatar = avaliableAvatars.pop()!;
-            decoder.set(randomAvatar.name, player);
-
-            return {
-                avatar: randomAvatar,
-                requestLine: () => getPlayerRequestLine(player),
-            };
-        });
-
-        const aiTurn: Turn = {
-            avatar: avaliableAvatars.pop()!,
+        return {
+            avatar: this.avaliableAvatars.pop()!,
             requestLine: aiRequestLine,
         };
-
-        const turns = [...playerTurns, aiTurn];
-        turns.sort(() => Math.random() - 0.5);
-
-        return [turns, decoder];
     }
 };
