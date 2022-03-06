@@ -1,16 +1,16 @@
-import { Point, Stroke } from "@ai-goes-to-ny/shared";
+import { Point } from "@ai-goes-to-ny/shared";
 import { Avatar } from "@ai-goes-to-ny/shared/dist/avatar";
 import { FC, useContext, useEffect, useState } from "react";
 import { Canvas } from "../canvas/canvas";
 import { SocketContext } from "../context/socket";
 import { Ribbon } from "./ribbon";
-
-const doNothing = () => {}
+import { useStrokes } from "./useStrokes";
 
 export const Game:FC = () => {
     const socket = useContext(SocketContext);
-    const [sendLine, setSendLine] = useState<(line: Point[]) => void>(() => doNothing);
-    const [strokes, setStrokes] = useState<Stroke[]>([]);
+
+    const [sendLine, setSendLine] = useState<(line: Point[]) => void>(() => () => {});
+    const [strokes, setStrokes] = useStrokes([]);
     const [currentlyDrawing, setCurrentlyDrawing] = useState<Avatar | undefined>();
     const [isActive, setIsActive] = useState<boolean>(false);
 
@@ -24,12 +24,19 @@ export const Game:FC = () => {
             setStrokes(strokes);
             setCurrentlyDrawing(currentlyDrawing);
         });
+
+        return () => {
+            socket.off("requestLine");
+            socket.off("roundStateUpdate");
+        }
     });
 
     const onLineFinished = (line: Point[]) => {
-        sendLine(line);
-        setSendLine(doNothing);
-        setIsActive(false);
+        if (isActive) {
+            sendLine(line);
+            setSendLine(() => {});
+            setIsActive(false);
+        }
     };
 
     return (
