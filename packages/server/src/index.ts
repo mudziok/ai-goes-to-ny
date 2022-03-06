@@ -31,4 +31,5 @@ const main = async () => {
     });
 }
 
+console.log("O ja pierdole");
 main();

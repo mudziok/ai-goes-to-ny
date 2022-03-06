@@ -44,7 +44,7 @@ export class Round {
         this.updateRoundState(updatedRoundState);
     }
 
-    public async inquireGuesses(usedAvatars: Avatar[]) {
+    public inquireGuesses = async (usedAvatars: Avatar[]) => {
         const players = [...this.decoder.values()];
 
         const getPlayerRequestGuess = (player: GameSocket) => new Promise<Avatar>(resolve => {
