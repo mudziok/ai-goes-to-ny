@@ -1,4 +1,4 @@
-import { Point, RoundState, sleep, Stroke } from "@ai-goes-to-ny/shared";
+import { ColorStroke, Point, RoundState, sleep, Stroke } from "@ai-goes-to-ny/shared";
 import { Avatar, avatars } from "@ai-goes-to-ny/shared/dist/avatar";
 import { Socket } from "socket.io";
 import { AI } from "./ai";
@@ -11,7 +11,7 @@ interface Turn {
 
 export class Round {
     private ai = new AI;    
-    private strokes: Stroke[] = [];
+    private colorStrokes: ColorStroke[] = [];
     private avaliableAvatars: Avatar[] = Object.values(avatars);
     private decoder = new Map<string, GameSocket>();
 
@@ -26,7 +26,7 @@ export class Round {
     public async playTurn(turn: Turn) {
         const roundState: RoundState = {
             theme: "cat",
-            strokes: this.strokes,
+            colorStrokes: this.colorStrokes,
             currentlyDrawing: turn.avatar,
         };
         this.updateRoundState(roundState);
@@ -34,12 +34,16 @@ export class Round {
         const playerLine = turn.requestLine();
 
         try {
-            const newStroke: Stroke[] = await playerLine;
-            this.strokes = [...this.strokes, ...newStroke];
+            const newStrokes: Stroke[] = await playerLine;
+            const newColorStrokes: ColorStroke[] = newStrokes.map(stroke => ({
+                stroke: stroke,
+                author: turn.avatar,
+            }))
+            this.colorStrokes = [...this.colorStrokes, ...newColorStrokes];
         } catch (error) {}
         
         const updatedRoundState = {...roundState};
-        updatedRoundState.strokes = this.strokes;
+        updatedRoundState.colorStrokes = this.colorStrokes;
 
         this.updateRoundState(updatedRoundState);
     }
@@ -82,9 +86,10 @@ export class Round {
 
             player.emit("requestLine", (line: Point[]) => {
                 const movedLine = line.map(([x, y]) => [x - 150, y - 150] as Point);
-                const strokes = this.ai.lineToStroke(movedLine, this.strokes);
+                const currentStrokes = this.colorStrokes.map(colorStroke => colorStroke.stroke);
+                const newStrokes = this.ai.lineToStroke(movedLine, currentStrokes);
                 clearTimeout(timeout);
-                resolve(strokes);
+                resolve(newStrokes);
             });
         });
 
@@ -99,8 +104,9 @@ export class Round {
 
     public generateAiTurn = (): Turn => {
         const aiRequestLine: () => Promise<Stroke[]> = () => new Promise<Stroke[]>(async resolve => {
-            if (this.strokes.length > 0) {
-                this.ai.initRNNStateFromStrokes(this.strokes);
+            if (this.colorStrokes.length > 0) {
+                const currentStrokes = this.colorStrokes.map(colorStroke => colorStroke.stroke);
+                this.ai.initRNNStateFromStrokes(currentStrokes);
             }
             const newStroke = this.ai.generateLine();
 

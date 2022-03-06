@@ -1,11 +1,11 @@
-import { Stroke } from "@ai-goes-to-ny/shared"
+import { ColorStroke } from "@ai-goes-to-ny/shared"
 import { useRef, useState } from "react"
 
-export const useStrokes = (initialStrokes: Stroke[]): [Stroke[], (newStrokes: Stroke[]) => void] => {
-    const [visibleStrokes, setVisibleStrokes] = useState<Stroke[]>(initialStrokes);
+export const useStrokes = (initialStrokes: ColorStroke[]): [ColorStroke[], (newStrokes: ColorStroke[]) => void] => {
+    const [visibleStrokes, setVisibleStrokes] = useState<ColorStroke[]>(initialStrokes);
     const intervalRef = useRef<NodeJS.Timer>();
 
-    const interpolateTo = (newStrokes: Stroke[]) => {
+    const interpolateTo = (newStrokes: ColorStroke[]) => {
         if (intervalRef.current) {
             clearInterval(intervalRef.current);
         }

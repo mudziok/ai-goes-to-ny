@@ -1,10 +1,10 @@
 import Sketch from 'react-p5'
 import p5Types from 'p5'
 import { FC, useState } from 'react';
-import { Point, Stroke } from '@ai-goes-to-ny/shared'
+import { Point, ColorStroke } from '@ai-goes-to-ny/shared'
 
 interface CanvasProps {
-    strokes: Stroke[],
+    strokes: ColorStroke[],
     onLineFinished: (line: Point[]) => void,
 }
 
@@ -29,12 +29,12 @@ export const Canvas:FC<CanvasProps> = ({onLineFinished, strokes}) => {
     const draw = (p5: p5Types) => {
         p5.background(255);
         p5.strokeWeight(10);
-        p5.stroke(0,0,0);
         
         let draw = 0;
         let [x, y] = [150.0, 150.0];
         strokes.forEach(stroke => {
-            const [dx, dy, newDraw, ..._] = stroke;
+            const [dx, dy, newDraw] = stroke.stroke;
+            p5.stroke(stroke.author.color);
             if (draw) {
                 p5.line(x, y, x + dx, y + dy);
             }

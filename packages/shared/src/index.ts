@@ -3,6 +3,11 @@ import { Avatar } from "./avatar";
 export type Stroke = number[];
 export type Point = [number, number]
 
+export interface ColorStroke {
+    stroke: Stroke,
+    author: Avatar,
+}
+
 export enum RoomState {
     Login,
     Lobby,
@@ -16,7 +21,7 @@ export interface PlayerInfo {
 }
 
 export interface RoundState {
-    strokes: Stroke[],
+    colorStrokes: ColorStroke[],
     currentlyDrawing: Avatar,
     theme: string,
 }
@@ -26,7 +31,6 @@ export interface ServerToClientEvents {
     roomStateUpdate: (roomState: RoomState) => void,
 
     roundStateUpdate: (roundState: RoundState) => void,
-    newStroke: (newStrokes: Stroke[]) => void,
     requestLine: (callback: (line: Point[]) => void) => void,
     requestGuess: (avatars: Avatar[], callback: (avatar: Avatar) => void) => void,
 }

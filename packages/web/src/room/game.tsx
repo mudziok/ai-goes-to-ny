@@ -20,8 +20,8 @@ export const Game:FC = () => {
             setIsActive(true);
         }); 
         // @ts-ignore
-        socket.on("roundStateUpdate", ({currentlyDrawing, strokes, theme}) => {
-            setStrokes(strokes);
+        socket.on("roundStateUpdate", ({currentlyDrawing, colorStrokes, theme}) => {
+            setStrokes(colorStrokes);
             setCurrentlyDrawing(currentlyDrawing);
         });
 

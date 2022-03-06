@@ -55,10 +55,10 @@ describe("Round", () => {
         expect(updateRoundState).toBeCalledTimes(2);
 
         const newState: RoundState = updateRoundState.mock.calls[1][0];
-        const {currentlyDrawing, strokes} = newState;
+        const {currentlyDrawing, colorStrokes} = newState;
 
         expect(currentlyDrawing).toEqual(aiTurn.avatar);
-        expect(strokes.length).toBeGreaterThan(0);
+        expect(colorStrokes.length).toBeGreaterThan(0);
     });
 
     it("should process Player action", async () => {
@@ -86,10 +86,10 @@ describe("Round", () => {
         expect(updateRoundState).toBeCalledTimes(2);
 
         const newState: RoundState = updateRoundState.mock.calls[1][0];
-        const {currentlyDrawing, strokes} = newState;
+        const {currentlyDrawing, colorStrokes} = newState;
 
         expect(currentlyDrawing).toEqual(playerTurn.avatar);
-        expect(strokes.length).toEqual(0);
+        expect(colorStrokes.length).toEqual(0);
     });
 
     it("should add points after voting", async () => {
@@ -136,8 +136,8 @@ describe("Round", () => {
         expect(updateRoundState).toBeCalledTimes(6);
 
         const newState: RoundState = updateRoundState.mock.calls[5][0];
-        const {strokes} = newState;
+        const {colorStrokes} = newState;
 
-        expect(strokes.length).toEqual(7);
+        expect(colorStrokes.length).toEqual(7);
     });
 });
