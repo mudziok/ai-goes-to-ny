@@ -10,12 +10,6 @@ globalThis.fetch = fetch
 // structure imposed by RNN lib, [dx, dy, penDown, penUp, penFinished]
 type Stroke = number[];
 
-export const createAI = async () => {
-    const ai = new AI();
-    await ai.initialize();
-    return ai;
-}
-
 export class AI {
     private model: SketchRNN;
     private temperature: number = 0.25;
@@ -28,7 +22,7 @@ export class AI {
         this.state = this.model.zeroState();
     };
 
-    public initialize = async () => {
+    async initialize() {
         await this.model.initialize();
 
         this.model.setPixelFactor(2.0);
@@ -36,7 +30,7 @@ export class AI {
         this.state = this.model.zeroState();
     };
 
-    public generateLine = (): Stroke[] => {
+    generateLine(): Stroke[] {
         let strokes = [];
         do {
             this.stroke = this.sampleNewState();
@@ -45,7 +39,7 @@ export class AI {
         return strokes;
     };
 
-    public initRNNStateFromStrokes = (strokes: Stroke[]): void => {
+    initRNNStateFromStrokes(strokes: Stroke[]): void {
         let newState = this.model.zeroState();
         newState = this.model.update(this.model.zeroInput(), newState);
         newState = this.model.updateStrokes(strokes, newState, strokes.length - 1);
@@ -56,15 +50,14 @@ export class AI {
         this.stroke = lastStroke;
     }
 
-    private sampleNewState = (): Stroke => {
+    private sampleNewState(): Stroke {
         this.state = this.model.update(this.stroke, this.state);
         const pdf = this.model.getPDF(this.state, this.temperature);
 
         return this.model.sample(pdf);
     };
 
-    public lineToStroke = (line: Point[], allStrokes: Stroke[]): Stroke[] => {
-
+    lineToStroke(line: Point[], allStrokes: Stroke[]): Stroke[] {
         const endOfLastLine = allStrokes.reduce((acc, cur) => {
             return [acc[0] + cur[0], acc[1] + cur[1]];
         }, [0.0, 0.0])

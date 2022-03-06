@@ -7,7 +7,7 @@ export class Room {
     private players = new Set<GameSocket>();
     private roomState: RoomState = RoomState.Lobby;
 
-    constructor(private server: GameServer, private name: string, private closeServer: () => void) {}
+    constructor(private server: GameServer, private name: string, private closeRoom: () => void) {}
 
     public addPlayer = (player: GameSocket) => {
         console.log(`${player.data.name!} joined room ${this.name}`)
@@ -29,7 +29,7 @@ export class Room {
         player.leave(this.name);
 
         if (this.players.size === 0) {
-            this.closeServer();
+            this.closeRoom();
         }
 
         this.synchronizePlayerInfo();
@@ -47,7 +47,7 @@ export class Room {
         const round = new Round(updateRoundState);
         await round.initialize();
 
-        const [turns, decoder] = round.generateTurns(this.players);
+        const turns = round.generateTurns(this.players);
         const usedAvatars = turns.map(turn => turn.avatar);
 
         for (const turn of turns) {
@@ -56,7 +56,7 @@ export class Room {
 
         this.changeRoomState(RoomState.Guesses);
         await sleep(1000);
-        await round.inquireGuesses(usedAvatars, decoder);
+        await round.inquireGuesses(usedAvatars);
 
         this.synchronizePlayerInfo();
         this.changeRoomState(RoomState.Lobby);
