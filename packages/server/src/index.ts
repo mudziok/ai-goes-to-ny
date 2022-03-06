@@ -1,10 +1,5 @@
-import { ClientToServerEvents,  ServerToClientEvents, SocketData } from "@ai-goes-to-ny/shared";
-import { Server, Socket } from "socket.io";
-import { DefaultEventsMap } from "socket.io/dist/typed-events";
 import { Room } from "./room";
-
-export type GameServer = Server<ClientToServerEvents, ServerToClientEvents, DefaultEventsMap, SocketData>
-export type GameSocket = Socket<ClientToServerEvents, ServerToClientEvents>
+import { createServer, GameServer } from "./utils";
 
 const rooms = new Map<String, Room>();
 
@@ -14,11 +9,7 @@ const closeRoom = (name: string) => {
 
 const main = async () => {
 
-    const server: GameServer = new Server<ClientToServerEvents, ServerToClientEvents, DefaultEventsMap, SocketData>(8000, {
-        cors: {
-            origin: '*'
-        }
-    });
+    const server: GameServer = createServer(8000);
 
     server.on("connection", (socket) => {
         socket.on("joinRoom", (nickname, roomName, callback) => {

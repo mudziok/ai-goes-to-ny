@@ -1,17 +1,15 @@
 import { PlayerInfo, RoomState, RoundState, sleep } from "@ai-goes-to-ny/shared";
 import { Socket } from "socket.io";
-import { GameServer, GameSocket } from ".";
 import { Round } from "./round";
+import { GameServer, GameSocket } from "./utils";
 
 export class Room {
     private players = new Set<GameSocket>();
     private roomState: RoomState = RoomState.Lobby;
 
-    constructor(private server: GameServer, private name: string, private closeServer: () => void) {}
+    constructor(private server: GameServer, private name: string, private closeRoom: () => void) {}
 
     public addPlayer = (player: GameSocket) => {
-        console.log(`${player.data.name!} joined room ${this.name}`)
-
         this.players.add(player);
         player.join(this.name);
 
@@ -23,13 +21,11 @@ export class Room {
     };
 
     public removePlayer = (player: Socket) => {
-        console.log(`${player.data.name!} exited room ${this.name}`)
-
         this.players.delete(player);
         player.leave(this.name);
 
         if (this.players.size === 0) {
-            this.closeServer();
+            this.closeRoom();
         }
 
         this.synchronizePlayerInfo();
@@ -47,13 +43,16 @@ export class Room {
         const round = new Round(updateRoundState);
         await round.initialize();
 
-        const [turns, decoder] = round.generateTurns(this.players);
+        const turns = round.generateTurns(this.players);
         const usedAvatars = turns.map(turn => turn.avatar);
-        await round.startGame(turns);
+
+        for (const turn of turns) {
+            await round.playTurn(turn);
+        }
 
         this.changeRoomState(RoomState.Guesses);
         await sleep(1000);
-        await round.inquireGuesses(usedAvatars, decoder);
+        await round.inquireGuesses(usedAvatars);
 
         this.synchronizePlayerInfo();
         this.changeRoomState(RoomState.Lobby);
