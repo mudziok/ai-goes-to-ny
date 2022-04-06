@@ -1,5 +1,6 @@
 import { PlayerInfo, RoomState } from "@ai-goes-to-ny/shared";
 import { useContext, useState } from "react";
+import { BottomSheet } from "../common/bottomSheet";
 import { SocketContext } from "../context/socket";
 import { Lobby } from "../lobby/lobby";
 import { Game } from "./game";
@@ -37,7 +38,9 @@ export const Room = () => {
                 <div className="w-full h-full">
                     <Game />
                     { roomState === RoomState.Guesses && 
-                        <Guesses />
+                        <BottomSheet>
+                            <Guesses />
+                        </BottomSheet>
                     }
                 </div>
             }
